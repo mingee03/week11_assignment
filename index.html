@@ -3,20 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AJAX CRUD (Fetch & Modal)</title>
+    <title>AJAX 사용자 관리</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+    
     <style>
         body { padding: 20px; }
-        .controls button { margin: 5px; }
+        .avatar-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2 class="mb-3">제품 목록 (Bootstrap & Fetch)</h2>
+        <h2 class="mb-3">사용자 관리 시스템</h2>
         
-        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#productModal">
-            새 상품 추가
+        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#userModal">
+            새 사용자 추가
         </button>
         <button id="btn_list" class="btn btn-secondary mb-3">목록 새로고침</button>
 
@@ -24,43 +31,43 @@
             <thead class="table-dark">
                 <tr>
                     <th>ID</th>
-                    <th>상품명</th>
-                    <th>카테고리</th>
-                    <th>가격</th>
-                    <th>재고</th>
+                    <th>아바타</th>
+                    <th>이름</th>
+                    <th>생년월일</th>
+                    <th>성별</th>
                     <th>관리</th>
                 </tr>
             </thead>
-            <tbody id="product-list-body">
+            <tbody id="user-list-body">
             </tbody>
         </table>
     </div>
 
-    <div class="modal fade" id="productModal" tabindex="-1">
+    <div class="modal fade" id="userModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitle">새 상품 추가</h5>
+                    <h5 class="modal-title" id="modalTitle">새 사용자 추가</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="input_id">
                     
                     <div class="mb-3">
-                        <label for="input_name" class="form-label">상품명</label>
+                        <label for="input_name" class="form-label">이름</label>
                         <input type="text" class="form-control" id="input_name" required>
                     </div>
                     <div class="mb-3">
-                        <label for="input_category" class="form-label">카테고리</label>
-                        <input type="text" class="form-control" id="input_category">
+                        <label for="input_avatar" class="form-label">아바타 (이미지 URL)</label>
+                        <input type="text" class="form-control" id="input_avatar">
                     </div>
                     <div class="mb-3">
-                        <label for="input_price" class="form-label">가격</label>
-                        <input type="number" class="form-control" id="input_price" required>
+                        <label for="input_birth" class="form-label">생년월일</label>
+                        <input type="date" class="form-control" id="input_birth">
                     </div>
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" id="input_inStock">
-                        <label class="form-check-label" for="input_inStock">재고 있음</label>
+                    <div class="mb-3">
+                        <label for="input_gender" class="form-label">성별</label>
+                        <input type="text" class="form-control" id="input_gender">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -72,44 +79,46 @@
     </div>
 
     <script>
-        const API_URL = "https://6915408484e8bd126af93c35.mockapi.io/products";
+        const API_URL = "https://6915408484e8bd126af93c35.mockapi.io/product";
 
-        const productModal = new bootstrap.Modal(document.getElementById('productModal'));
+        const userModal = new bootstrap.Modal(document.getElementById('userModal'));
         const modalTitle = document.getElementById('modalTitle');
 
         const inputId = document.getElementById('input_id');
         const inputName = document.getElementById('input_name');
-        const inputCategory = document.getElementById('input_category');
-        const inputPrice = document.getElementById('input_price');
-        const inputInStock = document.getElementById('input_inStock');
+        const inputAvatar = document.getElementById('input_avatar');
+        const inputBirth = document.getElementById('input_birth');
+        const inputGender = document.getElementById('input_gender');
 
-        async function fetchProducts() {
+        async function fetchUsers() {
             try {
                 const response = await fetch(API_URL);
                 if (!response.ok) throw new Error('데이터 로딩 실패');
                 
-                const products = await response.json();
+                const users = await response.json();
                 
-                const listBody = document.getElementById('product-list-body');
+                const listBody = document.getElementById('user-list-body');
                 listBody.innerHTML = ''; 
 
-                products.forEach(product => {
-                    const stock = product.inStock ? '✔️ 재고있음' : '❌ 재고없음';
+                users.forEach(user => {
+                    const birthDate = user.birth ? user.birth.split('T')[0] : '정보 없음';
+
                     const row = `
                         <tr>
-                            <td>${product.id}</td>
-                            <td>${product.name}</td>
-                            <td>${product.category}</td>
-                            <td>${product.price.toLocaleString()}원</td>
-                            <td>${stock}</td>
+                            <td>${user.id}</td>
+                            <td><img src="${user.avatar}" alt="${user.name}" class="avatar-img"></td>
+                            <td>${user.name}</td>
+                            <td>${birthDate}</td>
+                            <td>${user.gender}</td>
                             <td>
-                                <button class="btn btn-warning btn-sm btn-edit" data-id="${product.id}">수정</button>
-                                <button class="btn btn-danger btn-sm btn-delete" data-id="${product.id}">삭제</button>
+                                <button class="btn btn-warning btn-sm btn-edit" data-id="${user.id}">수정</button>
+                                <button class="btn btn-danger btn-sm btn-delete" data-id="${user.id}">삭제</button>
                             </td>
                         </tr>
                     `;
                     listBody.insertAdjacentHTML('beforeend', row);
                 });
+
             } catch (error) {
                 console.error(error);
                 alert(error.message);
@@ -119,22 +128,23 @@
         function clearForm() {
             inputId.value = '';
             inputName.value = '';
-            inputCategory.value = '';
-            inputPrice.value = '';
-            inputInStock.checked = false;
+            inputAvatar.value = '';
+            inputBirth.value = '';
+            inputGender.value = '';
         }
 
-        async function saveProduct() {
+        async function saveUser() {
             const id = inputId.value; 
-            const productData = {
+            
+            const userData = {
                 name: inputName.value,
-                category: inputCategory.value,
-                price: Number(inputPrice.value),
-                inStock: inputInStock.checked
+                avatar: inputAvatar.value,
+                birth: inputBirth.value,
+                gender: inputGender.value
             };
 
-            if (!productData.name || !productData.price) {
-                alert("상품명과 가격은 필수입니다.");
+            if (!userData.name) {
+                alert("이름은 필수입니다.");
                 return;
             }
 
@@ -150,7 +160,7 @@
                 const response = await fetch(url, {
                     method: method,
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(productData)
+                    body: JSON.stringify(userData)
                 });
 
                 if (!response.ok) {
@@ -158,9 +168,10 @@
                 }
 
                 alert(id ? '수정 성공!' : '추가 성공!');
+                
                 clearForm();
-                productModal.hide(); 
-                fetchProducts();     
+                userModal.hide();
+                fetchUsers();
 
             } catch (error) {
                 console.error(error);
@@ -173,16 +184,16 @@
                 const response = await fetch(`${API_URL}/${id}`);
                 if (!response.ok) throw new Error('데이터 조회 실패');
 
-                const product = await response.json();
+                const user = await response.json();
                 
-                inputId.value = product.id;
-                inputName.value = product.name;
-                inputCategory.value = product.category;
-                inputPrice.value = product.price;
-                inputInStock.checked = product.inStock;
+                inputId.value = user.id;
+                inputName.value = user.name;
+                inputAvatar.value = user.avatar;
+                inputBirth.value = user.birth ? user.birth.split('T')[0] : '';
+                inputGender.value = user.gender;
 
-                modalTitle.textContent = '상품 정보 수정';
-                productModal.show();
+                modalTitle.textContent = '사용자 정보 수정';
+                userModal.show();
 
             } catch (error) {
                 console.error(error);
@@ -191,7 +202,7 @@
         }
 
         async function handleDeleteClick(id) {
-            if (!confirm(`[${id}]번 제품을 정말 삭제하시겠습니까?`)) {
+            if (!confirm(`[${id}]번 사용자를 정말 삭제하시겠습니까?`)) {
                 return;
             }
 
@@ -203,7 +214,7 @@
                 if (!response.ok) throw new Error('삭제 실패');
                 
                 alert('삭제 성공!');
-                fetchProducts(); 
+                fetchUsers();
 
             } catch (error) {
                 console.error(error);
@@ -211,22 +222,23 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', fetchProducts);
+        document.addEventListener('DOMContentLoaded', fetchUsers);
 
-        document.getElementById('btn_list').addEventListener('click', fetchProducts);
+        document.getElementById('btn_list').addEventListener('click', fetchUsers);
 
-        document.querySelector('[data-bs-target="#productModal"]').addEventListener('click', () => {
+        document.querySelector('[data-bs-target="#userModal"]').addEventListener('click', () => {
             clearForm();
-            modalTitle.textContent = '새 상품 추가';
+            modalTitle.textContent = '새 사용자 추가';
         });
 
-        document.getElementById('btn_save').addEventListener('click', saveProduct);
+        document.getElementById('btn_save').addEventListener('click', saveUser);
 
-        document.getElementById('product-list-body').addEventListener('click', (e) => {
+        document.getElementById('user-list-body').addEventListener('click', (e) => {
             if (e.target.classList.contains('btn-edit')) {
                 const id = e.target.dataset.id;
                 handleEditClick(id);
-            } else if (e.target.classList.contains('btn-delete')) {
+            } 
+            else if (e.target.classList.contains('btn-delete')) {
                 const id = e.target.dataset.id;
                 handleDeleteClick(id);
             }
